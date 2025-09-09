@@ -1,0 +1,6 @@
+flask
+flask-socketio
+paho-mqtt
+requests
+opencv-python
+matplotlib

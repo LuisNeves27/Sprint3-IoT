@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>SysTrack - Dashboard (Sprint 3)</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f0f2f5; }
+    h1 { color: #333; }
+    table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    th { background-color: #007bff; color: white; }
+    tr:nth-child(even) { background-color: #f2f2f2; }
+    .metric { margin-bottom: 10px; font-weight: bold; }
+    .error { color: red; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>SysTrack - Dashboard (Sprint 3)</h1>
+
+  <h2>Sensores IoT</h2>
+  <table id="iot-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nome</th>
+        <th>Tipo</th>
+        <th>Localização</th>
+        <th>Último Valor</th>
+        <th>Última Atualização</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <h2>Detecções (Visão)</h2>
+  <table id="detection-table">
+    <thead>
+      <tr>
+        <th>Imagem</th>
+        <th>Motos Detectadas</th>
+        <th>Timestamp</th>
+        <th>Latency (ms)</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <h2>Métricas</h2>
+  <div class="metric" id="latency">POST Latency (ms): 0</div>
+  <div class="metric" id="total-detections">Total Detections: 0</div>
+  <div class="error" id="error-msg"></div>
+
+  <script>
+    async function fetchTelemetry() {
+      try {
+        const res = await fetch('/devices');
+        if (!res.ok) throw new Error('Erro ao buscar /devices');
+        const data = await res.json();
+        const tbody = document.querySelector('#iot-table tbody');
+        tbody.innerHTML = '';
+        data.forEach(dev => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${dev.id}</td>
+            <td>${dev.name}</td>
+            <td>${dev.type}</td>
+            <td>${dev.location}</td>
+            <td>${dev.value}</td>
+            <td>${dev.last_update}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        document.getElementById('error-msg').innerText = err.message;
+      }
+    }
+
+    async function fetchDetections() {
+      try {
+        const res = await fetch('/detections');
+        if (!res.ok) throw new Error('Erro ao buscar /detections');
+        const data = await res.json();
+        const tbody = document.querySelector('#detection-table tbody');
+        tbody.innerHTML = '';
+        let total = 0, latencySum = 0;
+        data.forEach(det => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${det.image}</td>
+            <td>${det.detections}</td>
+            <td>${det.timestamp}</td>
+            <td>${det.post_latency_ms?.toFixed(2) || 0}</td>
+          `;
+          tbody.appendChild(tr);
+          total += det.detections;
+          latencySum += det.post_latency_ms || 0;
+        });
+        document.getElementById('total-detections').innerText =
+          'Total Detections: ' + total;
+        document.getElementById('latency').innerText =
+          'POST Latency (ms): ' + (latencySum / (data.length || 1)).toFixed(2);
+      } catch (err) {
+        document.getElementById('error-msg').innerText = err.message;
+      }
+    }
+
+    function updateDashboard() {
+      fetchTelemetry();
+      fetchDetections();
+    }
+
+    setInterval(updateDashboard, 2000);
+    updateDashboard();
+  </script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "run_timestamp": "2025-09-08 15:11:24",
+  "summary": [
+    {
+      "image": "suggested-BQmX7EOEVmvTEPsZOIqF_jpg.rf.24ff6a535532464c32b4fadb55a8e9b2.jpg",
+      "detections": 2,
+      "sent": true,
+      "post_latency_ms": 2071.3107585906982
+    },
+    {
+      "image": "DSC_13991_jpg.rf.e99bf3766f5f4b9bcb06136a38ac29fa.jpg",
+      "detections": 3,
+      "sent": true,
+      "post_latency_ms": 2062.8955364227295
+    }
+  ]
+}
