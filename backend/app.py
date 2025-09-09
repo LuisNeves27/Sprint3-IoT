@@ -28,9 +28,25 @@ def device_update():
     with get_connection() as conn:
         cur = conn.cursor()
         cur.execute("""
-            INSERT INTO sensors (sensor_name, sensor_type, location, last_value, last_update)
-            VALUES (:1, :2, :3, :4, SYSTIMESTAMP)
-        """, [data.get("id"), data.get("type"), data.get("location"), data.get("value")])
+            MERGE INTO sensors s
+            USING (SELECT :id AS id FROM dual) d
+            ON (s.id = d.id)
+            WHEN MATCHED THEN
+              UPDATE SET sensor_name = :name,
+                         sensor_type = :type,
+                         location = :location,
+                         last_value = :value,
+                         last_update = SYSTIMESTAMP
+            WHEN NOT MATCHED THEN
+              INSERT (id, sensor_name, sensor_type, location, last_value, last_update)
+              VALUES (:id, :name, :type, :location, :value, SYSTIMESTAMP)
+        """, {
+            "id": data["id"],
+            "name": data["id"],  
+            "type": data["type"],
+            "location": data["location"],
+            "value": data["value"]
+        })
         conn.commit()
     return jsonify({"ok": True})
 
