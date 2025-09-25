@@ -6,8 +6,11 @@ import time
 app = Flask(__name__)
 CORS(app)
 
-DB_USER = "rm558127"
-DB_PASS = "270406"
+DB_USER = ""
+DB_PASS = ""
+
+DB_USER = ""
+DB_PASS = ""
 DB_DSN  = oracledb.makedsn("oracle.fiap.com.br", 1521, sid="orcl")
 
 def get_connection():
