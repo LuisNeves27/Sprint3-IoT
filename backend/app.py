@@ -8,9 +8,6 @@ CORS(app)
 
 DB_USER = ""
 DB_PASS = ""
-
-DB_USER = ""
-DB_PASS = ""
 DB_DSN  = oracledb.makedsn("oracle.fiap.com.br", 1521, sid="orcl")
 
 def get_connection():
