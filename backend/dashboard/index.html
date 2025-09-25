@@ -45,6 +45,22 @@
     <tbody></tbody>
   </table>
 
+  <h2>Ocorrências Reais (Motos)</h2>
+  <table id="occurrence-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Descrição</th>
+        <th>Cidade</th>
+        <th>Estado</th>
+        <th>Clima</th>
+        <th>Gravidade</th>
+        <th>Timestamp</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
   <h2>Métricas</h2>
   <div class="metric" id="latency">POST Latency (ms): 0</div>
   <div class="metric" id="total-detections">Total Detections: 0</div>
@@ -62,11 +78,11 @@
           const tr = document.createElement('tr');
           tr.innerHTML = `
             <td>${dev.id}</td>
-            <td>${dev.name}</td>
-            <td>${dev.type}</td>
-            <td>${dev.location}</td>
-            <td>${dev.value}</td>
-            <td>${dev.last_update}</td>
+            <td>${dev.name || ''}</td>
+            <td>${dev.type || ''}</td>
+            <td>${dev.location || ''}</td>
+            <td>${dev.value || ''}</td>
+            <td>${dev.last_update || ''}</td>
           `;
           tbody.appendChild(tr);
         });
@@ -88,7 +104,7 @@
           tr.innerHTML = `
             <td>${det.image}</td>
             <td>${det.detections}</td>
-            <td>${det.timestamp}</td>
+            <td>${det.timestamp || ''}</td>
             <td>${det.post_latency_ms?.toFixed(2) || 0}</td>
           `;
           tbody.appendChild(tr);
@@ -104,9 +120,38 @@
       }
     }
 
+    async function fetchOccurrences() {
+      try {
+        const res = await fetch('/occurrences');
+        if (!res.ok) throw new Error('Erro ao buscar /occurrences');
+        const data = await res.json();
+        const tbody = document.querySelector('#occurrence-table tbody');
+        tbody.innerHTML = '';
+        data.forEach(o => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${o.id}</td>
+            <td>${o.description || ''}</td>
+            <td>${o.city || ''}</td>
+            <td>${o.state || ''}</td>
+            <td>${o.weather || ''}</td>
+            <td>${o.severity || ''}</td>
+            <td>${o.timestamp || ''}</td>
+          `;
+          // destaque para casos graves
+          if (o.severity >= 4) tr.style.background = '#ffb3b3';
+          else if (o.severity == 2 || o.severity == 3) tr.style.background = '#fff3bf';
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        document.getElementById('error-msg').innerText = err.message;
+      }
+    }
+
     function updateDashboard() {
       fetchTelemetry();
       fetchDetections();
+      fetchOccurrences();
     }
 
     setInterval(updateDashboard, 2000);

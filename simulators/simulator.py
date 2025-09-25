@@ -1,51 +1,44 @@
-import time, json, random, argparse
-import paho.mqtt.client as mqtt
-import requests  
+# simulators/simulate_vision.py
+import requests
+import time
+import random
 
+BACKEND = "http://localhost:5000/detections"  # ajuste se necessário
 
-MQTT_BROKER = 'test.mosquitto.org'
-MQTT_PORT = 1883
+IMAGES = ["img001.jpg", "img002.jpg", "img003.jpg", "img004.jpg"]
 
+def simulate_once(image_name):
+    # gerar detections (lista) — compatível com backend que faz len(detections)
+    n = random.randint(0, 4)
+    detections = []
+    for i in range(n):
+        detections.append({
+            "id": f"moto_{i+1}",
+            "bbox": [random.randint(0, 200), random.randint(0,200), random.randint(20,80), random.randint(20,80)],
+            "score": round(random.uniform(0.5, 1.0), 2)
+        })
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--id', required=True)
-parser.add_argument('--interval', type=float, default=2.0)
-args = parser.parse_args()
-
-
-client = mqtt.Client()
-client.connect(MQTT_BROKER, MQTT_PORT, 60)
-
-
-while True:
     payload = {
-        'device_id': args.id,
-        'timestamp': time.strftime('%Y-%m-%d %H:%M:%S'),
-        'latitude': round(-23.5 + random.random() * 0.02, 6),
-        'longitude': round(-46.6 + random.random() * 0.02, 6),
-        'status': random.choice(['idle', 'moving', 'parked']),
-        'battery': random.randint(10, 100),
-        'actuator_lock': random.choice([True, False]),
-        'temperature': round(20 + random.random() * 10, 1)
+        "image": image_name,
+        "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "detections": detections
     }
 
-    
-    topic = f'systack/iot/{args.id}'
-    client.publish(topic, json.dumps(payload))
-    print('Published', topic, payload)
-
-    
-    backend_payload = {
-        "id": int(args.id),
-        "status": payload["status"],
-        "timestamp": payload["timestamp"],
-        "value": payload["temperature"] 
-    }
     try:
-        r = requests.post("http://localhost:5000/device_update", json=backend_payload, timeout=2)
-        print(f"Sent to backend, status code: {r.status_code}")
+        start = time.time()
+        r = requests.post(BACKEND, json=payload, timeout=6)
+        latency = (time.time() - start) * 1000.0
+        print(f"[POST detections] {image_name} -> status {r.status_code}, detections={len(detections)}, latency={latency:.2f} ms")
+        # opcional: enviar um evento de correção ou log com a latência para o backend se precisar
     except Exception as e:
-        print("Error sending to backend:", e)
+        print("[ERROR detections POST]", e)
 
-    
-    time.sleep(args.interval)
+def main():
+    print("Simulador de visão iniciado...")
+    while True:
+        img = random.choice(IMAGES)
+        simulate_once(img)
+        time.sleep(4)  # intervalo entre envios
+
+if __name__ == "__main__":
+    main()

@@ -1,51 +1,94 @@
+# backend/simulator.py
+import threading
 import requests
 import random
 import time
 
-BACKEND_URL = "http://127.0.0.1:5000/device_update"  # ajuste se rodar em rede
+BACKEND = "http://localhost:5000/device_update"  # ajuste se usar IP diferente
 
-# Função para enviar dados
-def enviar_dado(sensor_id, sensor_type, location, value):
+def send_payload(payload):
     try:
+        r = requests.post(BACKEND, json=payload, timeout=5)
+        print(f"[POST] {BACKEND} -> {r.status_code} | {payload}")
+    except Exception as e:
+        print("[ERROR POST]", e, payload)
+
+def sensor_temperature(sensor_id=1, interval=5):
+    while True:
+        value = round(random.uniform(20.0, 35.0), 2)
         payload = {
-            "id": sensor_id,
-            "type": sensor_type,
-            "location": location,
+            "id": sensor_id,            # numeric id (compatível com schema identity)
+            "device_id": sensor_id,
+            "name": f"temp-{sensor_id}",
+            "type": "temperature",
+            "location": "Garagem",
             "value": value
         }
-        res = requests.post(BACKEND_URL, json=payload)
-        print(f"[OK] {sensor_id} -> {value} | Status {res.status_code}")
-    except Exception as e:
-        print("[ERRO]", e)
+        send_payload(payload)
+        time.sleep(interval)
 
-
-def simular():
+def sensor_humidity(sensor_id=2, interval=6):
     while True:
-        # 🌡️ Sensor 1: Temperatura
-        temp = round(random.uniform(20, 35), 2)
-        enviar_dado("temp-01", "temperature", "Garagem", temp)
+        value = round(random.uniform(35.0, 85.0), 1)
+        payload = {
+            "id": sensor_id,
+            "device_id": sensor_id,
+            "name": f"hum-{sensor_id}",
+            "type": "humidity",
+            "location": "Garagem",
+            "value": value
+        }
+        send_payload(payload)
+        time.sleep(interval)
 
-        # 💧 Sensor 2: Umidade
-        umid = round(random.uniform(40, 80), 2)
-        enviar_dado("umid-01", "humidity", "Garagem", umid)
-
-        # 🏍️ Sensor 3: Localização da Moto
-        # Casos de uso realistas
-        caso = random.choice(["normal", "fora", "desaparecida"])
-        
+def sensor_gps_moto(sensor_id=3, interval=7):
+    """
+    Simula a localização da moto com 3 casos:
+     - normal -> 'Garagem'
+     - fora do lugar -> 'Rua 123'
+     - desaparecida -> 'DESAPARECIDA' (value=0)
+    """
+    cases = ["normal", "fora", "desaparecida"]
+    while True:
+        caso = random.choices(cases, weights=[0.7, 0.2, 0.1])[0]  # mais vezes 'normal'
         if caso == "normal":
             loc = "Garagem"
+            value = 1
         elif caso == "fora":
             loc = "Rua 123"
-        elif caso == "desaparecida":
+            value = 1
+        else:
             loc = "DESAPARECIDA"
+            value = 0
 
-        enviar_dado("moto-01", "gps", loc, 1 if caso != "desaparecida" else 0)
+        payload = {
+            "id": sensor_id,
+            "device_id": sensor_id,
+            "name": f"moto-{sensor_id}",
+            "type": "gps",
+            "location": loc,
+            "value": value,
+            "case": caso  # campo extra para depuração / logs
+        }
+        send_payload(payload)
+        print(f"[MOTO] caso={caso}")
+        time.sleep(interval)
 
-        print(f"[SIMULAÇÃO] Caso Moto: {caso.upper()}")
+def main():
+    threads = [
+        threading.Thread(target=sensor_temperature, args=(1, 5), daemon=True),
+        threading.Thread(target=sensor_humidity, args=(2, 6), daemon=True),
+        threading.Thread(target=sensor_gps_moto, args=(3, 7), daemon=True),
+    ]
+    for t in threads:
+        t.start()
 
-        time.sleep(5)  # intervalo entre leituras
-
+    print("Simulador IoT iniciado: 3 sensores ativos (temp, humidity, moto GPS). Ctrl+C para sair.")
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("Parando simulador...")
 
 if __name__ == "__main__":
-    simular()
+    main()
