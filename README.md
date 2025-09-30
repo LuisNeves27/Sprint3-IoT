@@ -138,14 +138,13 @@ Essas ocorrências já estão cadastradas via `scriptsql.sql` e podem ser consul
 
 **Gustavo Rangel**
 💼 Estudante de Análise e Desenvolvimento de Sistemas - FIAP
-🔗 [LinkedIn](#)
 
 **David Rapeckman**
 💼 Estudante de Análise e Desenvolvimento de Sistemas - FIAP
-🔗 [LinkedIn](#)
+
 
 **Luis Felippe Morais**
 💼 Estudante de Análise e Desenvolvimento de Sistemas - FIAP
-🔗 [LinkedIn](#)
+
 
 ---
