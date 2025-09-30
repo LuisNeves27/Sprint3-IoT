@@ -4,3 +4,5 @@ paho-mqtt
 requests
 opencv-python
 matplotlib
+flask-cors
+oracledb
