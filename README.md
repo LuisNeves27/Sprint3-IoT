@@ -79,18 +79,21 @@ O objetivo foi desenvolver e integrar uma solução IoT com simulação de senso
    python backend/app.py
    ```
 
-   Terminal 2 – Simuladores
+6. Terminal 2 – Simuladores
+   
+ ```bash
 cd /d/Sprint2-Iot/simulators
 python simulator.py 1 &
 python simulator.py 2 &
 python simulator.py 3 &
-
-Terminal 3 – Visão Computacional
+```
+7. Terminal 3 – Visão Computacional
+````bash
 cd /d/Sprint2-Iot/vision
 python Iot.py 
+````
 
-
-6. Acesse o dashboard:
+8. Acesse o dashboard:
 
    ```
    http://localhost:5000/
